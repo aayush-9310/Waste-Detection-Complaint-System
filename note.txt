@@ -1,0 +1,69 @@
+ML SERVICE SETUP
+================
+
+Run these commands from the project root in PowerShell:
+
+1. Move into the ML service folder:
+   cd ml-service
+
+2. Create a Python virtual environment:
+   py -m venv venv
+
+   If the `py` command is unavailable, use:
+   python -m venv venv
+
+3. Activate the virtual environment:
+   .\venv\Scripts\Activate.ps1
+
+   If PowerShell blocks activation, run this once in the same terminal and try again:
+   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+4. Upgrade pip (recommended):
+   python -m pip install --upgrade pip
+
+5. Install all ML service requirements:
+   pip install -r requirements.txt
+
+6. Start the ML service:
+   python app.py
+
+The service uses the model files in ml-service/models and should run on port 5000.
+
+WHEN YOU RETURN LATER
+=====================
+
+From the project root, activate the environment again before running the service:
+   cd ml-service
+   .\venv\Scripts\Activate.ps1
+   python app.py
+
+
+
+
+
+EMAIL APP PASSWORD
+==================
+
+The backend email configuration needs an email-provider app password, not your normal email password.
+For step-by-step instructions for your provider (for example, Gmail), ask ChatGPT:
+"How do I create an app password for my email account for a Node.js Nodemailer app?"
+
+Then place the generated password in server/.env as EMAIL_PASSWORD. Do not commit it to Git.
+
+
+
+
+NODE.JS SETUP
+=============
+
+Install Node.js dependencies separately for both the client and server. Run these commands from the project root:
+
+1. Install client dependencies:
+   cd client
+   npm install
+
+2. Return to the project root and install server dependencies:
+   cd ..\server
+   npm install
+
+This creates the node_modules folder in both client and server. These folders are ignored by Git and should not be committed.
