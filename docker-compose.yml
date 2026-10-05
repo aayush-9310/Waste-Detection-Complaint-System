@@ -1,0 +1,52 @@
+services:
+  # 1. MongoDB Database
+  mongo:
+    image: mongo:latest
+    container_name: waste_detection_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # 2. Python ML Service (Flask + TFLite)
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: waste_detection_ml
+    ports:
+      - "5001:5001"
+
+  # 3. Node.js Express Backend Server
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: waste_detection_server
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - MONGO_URI=mongodb://mongo:27017/waste_detection
+      - JWT_SECRET=super_secret_jwt_key_12345
+    depends_on:
+      - mongo
+      - ml-service
+
+  # 4. React Frontend (Nginx)
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3000
+        VITE_ML_API_URL: http://localhost:5001
+    container_name: waste_detection_client
+    ports:
+      - "5173:5173"
+    depends_on:
+      - server
+      - ml-service
+
+volumes:
+  mongo_data:
