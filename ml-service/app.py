@@ -1,10 +1,17 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import tensorflow as tf
 import numpy as np
 from PIL import Image
 import json
 import io
+
+try:
+    import ai_edge_litert.interpreter as tflite
+except ImportError:
+    try:
+        import tflite_runtime.interpreter as tflite
+    except ImportError:
+        import tensorflow.lite as tflite
 
 app = Flask(__name__)
 CORS(app)
@@ -12,18 +19,34 @@ CORS(app)
 # ── Load BOTH models on startup ───────────────────────────
 print("Loading models...")
 
-waste_model    = tf.keras.models.load_model('models/waste_classifier_final.keras')
-severity_model = tf.keras.models.load_model('models/severity_model_best.h5')
+# Load TFLite models
+waste_interpreter = tflite.Interpreter(model_path='models/waste_classifier_final.tflite')
+waste_interpreter.allocate_tensors()
+waste_input_details = waste_interpreter.get_input_details()
+waste_output_details = waste_interpreter.get_output_details()
+
+severity_interpreter = tflite.Interpreter(model_path='models/severity_model_best.tflite')
+severity_interpreter.allocate_tensors()
+severity_input_details = severity_interpreter.get_input_details()
+severity_output_details = severity_interpreter.get_output_details()
 
 with open('models/class_indices.json', 'r') as f:   
-    waste_classes = {int(k): v for k, v in json.load(f).items()}    #  json.load(f) - read json file and convert it into python dict , .items() - convert dict into key-value pairs  ,loop through each key value pair converting key from string to integer, final output --> { 0 : 'plastic', 1:'paper' }
+    waste_classes = {int(k): v for k, v in json.load(f).items()}
 
 with open('models/severity_class_indices.json', 'r') as f:
-    severity_classes = {int(k): v for k, v in json.load(f).items()}   # convert json file into python dict
+    severity_classes = {int(k): v for k, v in json.load(f).items()}
 
 print("Waste classes    :", list(waste_classes.values()))
 print("Severity classes :", severity_classes)
-print("Both models ready!")
+print("Both TFLite models ready!")
+
+# Helper function to run inference on a TFLite model
+def run_tflite_inference(interpreter, input_details, output_details, img_array):
+    # Ensure input array is float32
+    input_data = img_array.astype(np.float32)
+    interpreter.set_tensor(input_details[0]['index'], input_data)
+    interpreter.invoke()
+    return interpreter.get_tensor(output_details[0]['index'])
 
 # ── Reuse tips ────────────────────────────────────────────
 TIPS = {
@@ -121,10 +144,10 @@ TIPS = {
 
 # ── Helper: preprocess image ──────────────────────────────
 def preprocess(file_bytes):
-    img = Image.open(io.BytesIO(file_bytes)).convert('RGB')  # convert the raw bytes into image
+    img = Image.open(io.BytesIO(file_bytes)).convert('RGB')
     img = img.resize((224, 224))
-    arr = np.array(img) / 255.0    # convert image to array , 0-1(normalize)
-    return np.expand_dims(arr, axis=0)  # Adding an extra dimension at axis 0 coz model expects (batch_size, height, width, channels) , to make whole array in one batch to become one singel image not many images of small pixels
+    arr = (np.array(img) / 255.0).astype(np.float32)
+    return np.expand_dims(arr, axis=0)
 
 # ── Route: health check ───────────────────────────────────
 @app.route('/health', methods=['GET'])
@@ -141,17 +164,17 @@ def predict():
     img_array  = preprocess(file_bytes) 
 
     # ── Step 1: Check severity first ─────────────────────
-    sev_preds   = severity_model.predict(img_array, verbose=0)   # output -> probability of image in all classes 
-    sev_idx     = int(np.argmax(sev_preds))     # give the index of highest value among all the classes prob.
-    sev_label   = severity_classes[sev_idx]   # "high" or "low", index se label
+    sev_preds   = run_tflite_inference(severity_interpreter, severity_input_details, severity_output_details, img_array)
+    sev_idx     = int(np.argmax(sev_preds))
+    sev_label   = severity_classes[sev_idx]
     sev_conf    = float(np.max(sev_preds)) * 100
     severity    = sev_label.upper()
 
     # ── Step 2: Always classify waste type too ────────────
-    waste_preds   = waste_model.predict(img_array, verbose=0)  # array of prob.
+    waste_preds   = run_tflite_inference(waste_interpreter, waste_input_details, waste_output_details, img_array)
     waste_idx     = int(np.argmax(waste_preds))
     waste_type    = waste_classes[waste_idx]
-    waste_conf    = float(np.max(waste_preds)) * 100   # 80.0
+    waste_conf    = float(np.max(waste_preds)) * 100
 
     # ── Step 3: Build response based on severity ──────────
     tips = TIPS[waste_type] if severity == "LOW" else None
