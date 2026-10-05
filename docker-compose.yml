@@ -27,7 +27,7 @@ services:
       - "3000:3000"
     environment:
       - PORT=3000
-      - MONGO_URI=mongodb://mongo:27017/waste_detection
+      - MONGO_URL=mongodb://mongo:27017/waste_detection
       - JWT_SECRET=super_secret_jwt_key_12345
     depends_on:
       - mongo
