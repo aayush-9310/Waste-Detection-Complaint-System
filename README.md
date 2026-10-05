@@ -13,6 +13,29 @@ Users can either upload an image from their device and manually enter the locati
 
 User can also track all his/her complaints progress.
 
+## Requirements
+
+Install the following before running the project:
+- Docker Desktop
+- Git
+
+You do not need to install Node.js, Python, or MongoDB separately if you are running the application through Docker Compose.
+
+## Running the Application
+
+Clone the repository:
+
+- git clone <YOUR_GITHUB_REPOSITORY_URL>
+- cd Waste-Detection-Complaint-System
+
+Then start the complete application with:
+
+- docker compose up --build
+
+After the containers start, open the frontend in your browser:
+
+- http://localhost:5173
+
 ## Tech Stack
 
 | Layer | Technology |
