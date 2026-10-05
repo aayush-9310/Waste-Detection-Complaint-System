@@ -23,9 +23,7 @@ You do not need to install Node.js, Python, or MongoDB separately if you are run
 
 ## Running the Application
 
-Clone the repository:
-
-- git clone <YOUR_GITHUB_REPOSITORY_URL>
+- clone the repository
 - cd Waste-Detection-Complaint-System
 
 Then start the complete application with:
