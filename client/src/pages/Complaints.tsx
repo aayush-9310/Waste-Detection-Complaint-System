@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Navbar from '../components/Navbar'
 import axios from 'axios'
+import { API_BASE_URL } from '../config'
 
 interface TimelineEntry {
     status: string
@@ -42,7 +43,7 @@ export default function Complaints() {
         setComplaints([])
 
         try {
-            const res = await axios.get(`http://localhost:3000/api/complaints/track?q=${query.trim()}`)
+            const res = await axios.get(`${API_BASE_URL}/api/complaints/track?q=${query.trim()}`)
             setComplaints(res.data.complaints)
         } catch (e) {
             setError('No complaint found for this ID or email')

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import Navbar from './Navbar'
 import axios from 'axios'
+import { API_BASE_URL } from '../config'
 
 export default function ComplaintForm() {
     const { result, location, coords } = useApp()
@@ -29,7 +30,7 @@ export default function ComplaintForm() {
         setError('')
 
         try {
-            await axios.post('http://localhost:3000/api/complaints', {
+            await axios.post(`${API_BASE_URL}/api/complaints`, {
                 name,
                 contact,
                 email,

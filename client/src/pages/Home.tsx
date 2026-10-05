@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import Navbar from "../components/Navbar"
 import axios from 'axios'
+import { ML_API_URL } from '../config'
 
 export default function Home() {
     const { setResult, setCoords, setLocation } = useApp()
@@ -102,7 +103,7 @@ export default function Home() {
         formData.append("file", image)
 
         try {
-            const res = await axios.post('http://localhost:5001/predict', formData)
+            const res = await axios.post(`${ML_API_URL}/predict`, formData)
             console.log(res.data)  // add this
 
             setResult({ ...res.data, image: preview })

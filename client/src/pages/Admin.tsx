@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import axios from 'axios'
+import { API_BASE_URL } from '../config'
 
 interface TimelineEntry {
     status: string
@@ -54,7 +55,7 @@ export default function Admin() {
 
     async function fetchComplaints() {
         try {
-            const res = await axios.get('http://localhost:3000/api/complaints', authHeader)
+            const res = await axios.get(`${API_BASE_URL}/api/complaints`, authHeader)
             setComplaints(res.data.complaints)
         } catch (e) {
             console.error(e)
@@ -72,7 +73,7 @@ export default function Admin() {
         setUpdating(complaint_id)
         try {
             const res = await axios.patch(
-                `http://localhost:3000/api/complaints/${complaint_id}`,
+                `${API_BASE_URL}/api/complaints/${complaint_id}`,
                 { status, note },
                 authHeader
             )
